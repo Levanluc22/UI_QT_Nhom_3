@@ -3,35 +3,16 @@ import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 
 Item {
-    anchors.fill: parent
+    width: parent ? parent.width : 800
+    height: parent ? parent.height : 480
+
+    property bool hasValidSong: MusicApp.playlist.length > 0 && MusicApp.currentSongIndex >= 0 && MusicApp.currentSongIndex < MusicApp.playlist.length
 
     ColumnLayout {
         anchors.fill: parent
+        // ĐÃ XÓA KHỐI CODE ITEM NÚT BACK CŨ ĐỂ KHÔNG BÁO LỖI LAYOUT[cite: 12]
         anchors.margins: 40
         spacing: 30
-
-        Item {
-            width: 40
-            height: 40
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.margins: 20
-            z: 10
-
-            Image {
-                source: "qrc:/image_icons/back.png"
-                anchors.fill: parent
-                fillMode: Image.PreserveAspectFit
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    if (stackView.depth > 1) {
-                        stackView.pop()
-                    }
-                }
-            }
-        }
 
         Column {
             Layout.alignment: Qt.AlignHCenter
@@ -93,14 +74,14 @@ Item {
                     Layout.alignment: Qt.AlignVCenter
 
                     Text {
-                        text: MusicApp.playlist.length > 0 ? MusicApp.playlist[MusicApp.currentSongIndex].title : "Chưa có dữ liệu"
+                        text: hasValidSong ? MusicApp.playlist[MusicApp.currentSongIndex].title : "Chưa có dữ liệu"
                         color: "white"
                         font.pixelSize: 22
                         font.bold: true
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
                     Text {
-                        text: MusicApp.playlist.length > 0 ? MusicApp.playlist[MusicApp.currentSongIndex].artist : ""
+                        text: hasValidSong ? MusicApp.playlist[MusicApp.currentSongIndex].artist : ""
                         color: "#94a3b8"
                         font.pixelSize: 16
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -114,7 +95,7 @@ Item {
 
                     Image {
                         id: mainFavoriteIcon
-                        source: (MusicApp.playlist.length > 0 && MusicApp.playlist[MusicApp.currentSongIndex].isFavorite) ? "qrc:/image_icons/hearted.png" : "qrc:/image_icons/heart.png"
+                        source: (hasValidSong && MusicApp.playlist[MusicApp.currentSongIndex].isFavorite) ? "qrc:/image_icons/hearted.png" : "qrc:/image_icons/heart.png"
                         anchors.fill: parent
                         fillMode: Image.PreserveAspectFit
 
@@ -144,7 +125,7 @@ Item {
                 spacing: 15
 
                 Text {
-                    text: MusicApp.playlist.length > 0 ? MusicApp.formatTime(MusicApp.timeToSeconds(MusicApp.playlist[MusicApp.currentSongIndex].duration) * MusicApp.songProgress) : "0:00"
+                    text: hasValidSong ? MusicApp.formatTime(MusicApp.timeToSeconds(MusicApp.playlist[MusicApp.currentSongIndex].duration) * MusicApp.songProgress) : "0:00"
                     color: "#94a3b8"
                     font.pixelSize: 13
                     Layout.preferredWidth: 35
@@ -202,11 +183,11 @@ Item {
                             anchors.fill: parent
                             anchors.margins: -5
                             hoverEnabled: true
-                            onClicked: {
+                            onClicked: (mouse) => {
                                 var newProgress = mouse.x / width
                                 MusicApp.seekToProgress(Math.min(Math.max(newProgress, 0), 1))
                             }
-                            onPositionChanged: {
+                            onPositionChanged: (mouse) => {
                                 if (pressed) {
                                     var dragProgress = mouse.x / width
                                     MusicApp.seekToProgress(Math.min(Math.max(dragProgress, 0), 1))
@@ -217,7 +198,7 @@ Item {
                 }
 
                 Text {
-                    text: MusicApp.playlist.length > 0 ? MusicApp.playlist[MusicApp.currentSongIndex].duration : "0:00"
+                    text: hasValidSong ? MusicApp.playlist[MusicApp.currentSongIndex].duration : "0:00"
                     color: "#94a3b8"
                     font.pixelSize: 13
                     Layout.preferredWidth: 35
@@ -429,7 +410,7 @@ Item {
         }
 
         // ==========================================
-        // DANH SÁCH PHÁT (Đồng bộ siêu xịn từ PlaylistView)
+        // DANH SÁCH PHÁT DƯỚI ĐĨA THAN
         // ==========================================
         ColumnLayout {
             Layout.fillWidth: true
@@ -531,7 +512,11 @@ Item {
                                     height: 28
                                     scale: addMouse.pressed ? 0.8 : (addMouse.containsMouse ? 1.2 : 1.0)
 
-                                    Behavior on scale { NumberAnimation { duration: 100 } }
+                                    Behavior on scale {
+                                        NumberAnimation {
+                                            duration: 100
+                                        }
+                                    }
 
                                     Image {
                                         source: "qrc:/image_icons/add.png"
@@ -553,7 +538,11 @@ Item {
                                     height: 28
                                     scale: favMouse.pressed ? 0.8 : (favMouse.containsMouse ? 1.2 : 1.0)
 
-                                    Behavior on scale { NumberAnimation { duration: 100 } }
+                                    Behavior on scale {
+                                        NumberAnimation {
+                                            duration: 100
+                                        }
+                                    }
 
                                     Image {
                                         source: modelData.isFavorite ? "qrc:/image_icons/hearted.png" : "qrc:/image_icons/heart.png"
@@ -572,7 +561,11 @@ Item {
                                     height: 28
                                     scale: plMouse.pressed ? 0.8 : (plMouse.containsMouse ? 1.2 : 1.0)
 
-                                    Behavior on scale { NumberAnimation { duration: 100 } }
+                                    Behavior on scale {
+                                        NumberAnimation {
+                                            duration: 100
+                                        }
+                                    }
 
                                     Image {
                                         source: (modelData.isPlaying && MusicApp.isPlaying) ? "qrc:/image_icons/pause.png" : "qrc:/image_icons/play.png"
@@ -597,7 +590,11 @@ Item {
                                     height: 28
                                     scale: dotMouse.pressed ? 0.8 : (dotMouse.containsMouse ? 1.2 : 1.0)
 
-                                    Behavior on scale { NumberAnimation { duration: 100 } }
+                                    Behavior on scale {
+                                        NumberAnimation {
+                                            duration: 100
+                                        }
+                                    }
 
                                     Image {
                                         source: "qrc:/image_icons/three-dots.png"
@@ -621,9 +618,6 @@ Item {
         }
     }
 
-    // ==========================================
-    // MENU & POPUP GẮN KÈM
-    // ==========================================
     Menu {
         id: addToPlaylistMenu
         property int targetSongIndex: -1

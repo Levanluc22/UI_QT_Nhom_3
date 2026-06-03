@@ -2,7 +2,6 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 
 Item {
-    anchors.fill: parent
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 40
@@ -36,8 +35,18 @@ Item {
                 color2: "#0284c7"
                 onClicked: root.showCarWindow()
             }
-            AppCard { title: "Bản đồ"; iconSource: "qrc:/image_icons/google-maps.png"; color1: "#38bdf8"; color2: "#0284c7" }
-            AppCard { title: "Điện thoại"; iconSource: "qrc:/image_icons/call.png"; color1: "#4ade80"; color2: "#16a34a" }
+            AppCard {
+                title: "Bản đồ"
+                iconSource: "qrc:/image_icons/google-maps.png"
+                color1: "#38bdf8"
+                color2: "#0284c7"
+            }
+            AppCard {
+                title: "Điện thoại"
+                iconSource: "qrc:/image_icons/call.png"
+                color1: "#4ade80"
+                color2: "#16a34a"
+            }
             AppCard {
                 title: "Cài đặt"
                 iconSource: "qrc:/image_icons/setting.png"
@@ -45,14 +54,26 @@ Item {
                 color2: "#475569"
                 onClicked: root.navigateTo("settings", "SettingPage.qml")
             }
-            AppCard { title: "Radio"; iconSource: "qrc:/image_icons/radio.png"; color1: "#fbbf24"; color2: "#d97706" }
-            AppCard { title: "Điều hoà"; iconSource: "qrc:/image_icons/wind.png"; color1: "#f87171"; color2: "#dc2626" }
+            AppCard {
+                title: "Radio"
+                iconSource: "qrc:/image_icons/radio.png"
+                color1: "#fbbf24"
+                color2: "#d97706"
+            }
+            AppCard {
+                title: "Điều hoà"
+                iconSource: "qrc:/image_icons/wind.png"
+                color1: "#f87171"
+                color2: "#dc2626"
+            }
         }
 
-        Item { Layout.fillHeight: true }
+        Item {
+            Layout.fillHeight: true
+        }
 
         // ==========================================
-        // MINI PLAYER ĐÃ KẾT NỐI VỚI C++ (MusicApp)
+        // MINI PLAYER
         // ==========================================
         Rectangle {
             Layout.fillWidth: true
@@ -61,7 +82,12 @@ Item {
             radius: 25
             border.color: "#1e293b"
             border.width: 1
+
+            // ĐÃ THÊM DÒNG NÀY: CHỈ HIỂN THỊ KHI ĐÃ CÓ NHẠC VÀ ĐÃ BẤM PHÁT
             visible: MusicApp.playlist.length > 0 && MusicApp.hasStartedPlaying
+
+            property bool hasValidSong: MusicApp.playlist.length > 0 && MusicApp.currentSongIndex >= 0 && MusicApp.currentSongIndex < MusicApp.playlist.length
+
             RowLayout {
                 anchors.fill: parent
                 anchors.margins: 20
@@ -72,8 +98,14 @@ Item {
                     height: 70
                     radius: 15
                     gradient: Gradient {
-                        GradientStop { position: 0; color: "#c084fc" }
-                        GradientStop { position: 1; color: "#db2777" }
+                        GradientStop {
+                            position: 0
+                            color: "#c084fc"
+                        }
+                        GradientStop {
+                            position: 1
+                            color: "#db2777"
+                        }
                     }
                     Image {
                         source: "qrc:/image_icons/music.png"
@@ -81,7 +113,7 @@ Item {
                         height: 35
                         anchors.centerIn: parent
                         RotationAnimator on rotation {
-                            running: MusicApp.isPlaying // Gọi trạng thái từ C++
+                            running: MusicApp.isPlaying
                             from: 0
                             to: 360
                             duration: 8000
@@ -96,14 +128,13 @@ Item {
                     spacing: 8
 
                     Text {
-                        // Tránh lỗi khi danh sách nhạc từ C++ trống
-                        text: MusicApp.playlist.length > 0 ? MusicApp.playlist[MusicApp.currentSongIndex].title : "Chưa có bài hát"
+                        text: parent.parent.parent.hasValidSong ? MusicApp.playlist[MusicApp.currentSongIndex].title : "Chưa có bài hát"
                         color: "white"
                         font.bold: true
                         font.pixelSize: 18
                     }
                     Text {
-                        text: MusicApp.playlist.length > 0 ? MusicApp.playlist[MusicApp.currentSongIndex].artist : ""
+                        text: parent.parent.parent.hasValidSong ? MusicApp.playlist[MusicApp.currentSongIndex].artist : ""
                         color: "#94a3b8"
                         font.pixelSize: 14
                     }
@@ -119,24 +150,29 @@ Item {
                             color: "#334155"
                             radius: 2.5
                             Rectangle {
-                                width: parent.width * MusicApp.songProgress // Lấy phần trăm chạy từ C++
+                                width: parent.width * MusicApp.songProgress
                                 height: parent.height
                                 radius: 2.5
                                 gradient: Gradient {
-                                    GradientStop { position: 0; color: "#c084fc" }
-                                    GradientStop { position: 1; color: "#db2777" }
+                                    GradientStop {
+                                        position: 0
+                                        color: "#c084fc"
+                                    }
+                                    GradientStop {
+                                        position: 1
+                                        color: "#db2777"
+                                    }
                                 }
                             }
                         }
 
-                        // Gửi lệnh tua nhạc xuống C++
                         MouseArea {
                             anchors.fill: parent
-                            onClicked: {
+                            onClicked: (mouse) => {
                                 var newProgress = mouse.x / width
                                 MusicApp.seekToProgress(Math.min(Math.max(newProgress, 0), 1))
                             }
-                            onPositionChanged: {
+                            onPositionChanged: (mouse) => {
                                 if (pressed) {
                                     var dragProgress = mouse.x / width
                                     MusicApp.seekToProgress(Math.min(Math.max(dragProgress, 0), 1))
@@ -162,7 +198,7 @@ Item {
                             id: mousePrevMini
                             anchors.fill: parent
                             hoverEnabled: true
-                            onClicked: MusicApp.prevSong() // Lệnh chuyển bài C++
+                            onClicked: MusicApp.prevSong()
                         }
                     }
 

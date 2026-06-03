@@ -84,57 +84,46 @@ void MusicController::toggleFavorite(int index)
         QString title = song["title"].toString();
         QString artist = song["artist"].toString();
 
-        // 1. Cập nhật list hiện tại trên màn hình
+        // Cập nhật lên màn hình
         m_playlist[index] = song;
-        syncActivePlaylist();
 
-        // 2. ĐỒNG BỘ TRẠNG THÁI TIM CHO TOÀN BỘ CÁC DANH SÁCH KHÁC (FIX LỖI CHÍ MẠNG)
+        // BẢO VỆ CHỐNG LỖI BÓNG MA: Không bao giờ được dùng syncActivePlaylist() ghi đè m_favPlaylist
+        if (m_currentPlaylistType == "usb" || m_currentPlaylistType == "all") m_usbPlaylist = m_playlist;
+        else if (m_currentPlaylistType == "recent") m_recentPlaylist = m_playlist;
+        else if (m_currentPlaylistType.startsWith("custom_")) {
+            int idx = m_currentPlaylistType.split("_")[1].toInt();
+            m_allCustomPlaylists[idx] = m_playlist;
+        }
+
+        // ĐỒNG BỘ TIM CHO TẤT CẢ DANH SÁCH
         for (int i = 0; i < m_usbPlaylist.count(); i++) {
             QVariantMap s = m_usbPlaylist[i].toMap();
-            if (s["title"] == title && s["artist"] == artist) {
-                s["isFavorite"] = isFav;
-                m_usbPlaylist[i] = s;
-            }
+            if (s["title"] == title && s["artist"] == artist) { s["isFavorite"] = isFav; m_usbPlaylist[i] = s; }
         }
         for (int i = 0; i < m_recentPlaylist.count(); i++) {
             QVariantMap s = m_recentPlaylist[i].toMap();
-            if (s["title"] == title && s["artist"] == artist) {
-                s["isFavorite"] = isFav;
-                m_recentPlaylist[i] = s;
-            }
+            if (s["title"] == title && s["artist"] == artist) { s["isFavorite"] = isFav; m_recentPlaylist[i] = s; }
         }
         for (int i = 0; i < m_allCustomPlaylists.size(); i++) {
             QVariantList cl = m_allCustomPlaylists[i];
             for (int j = 0; j < cl.count(); j++) {
                 QVariantMap s = cl[j].toMap();
-                if (s["title"] == title && s["artist"] == artist) {
-                    s["isFavorite"] = isFav;
-                    cl[j] = s;
-                }
+                if (s["title"] == title && s["artist"] == artist) { s["isFavorite"] = isFav; cl[j] = s; }
             }
             m_allCustomPlaylists[i] = cl;
         }
 
-        // 3. Xử lý thêm/xóa trong mảng m_favPlaylist ngầm
+        // Xử lý list Yêu Thích ngầm
         if (isFav) {
-            // Kiểm tra xem đã có trong list tim chưa để tránh trùng lặp
             bool alreadyInFav = false;
             for (const QVariant& item : m_favPlaylist) {
-                QVariantMap favSong = item.toMap();
-                if (favSong["title"] == title && favSong["artist"] == artist) {
-                    alreadyInFav = true;
-                    break;
-                }
+                if (item.toMap()["title"] == title && item.toMap()["artist"] == artist) alreadyInFav = true;
             }
-            if (!alreadyInFav) {
-                m_favPlaylist.append(song);
-            }
+            if (!alreadyInFav) m_favPlaylist.append(song);
             emit showNotification("Đã thêm vào bài hát yêu thích");
         } else {
-            // Xóa khỏi mảng yêu thích, nhưng KHÔNG xóa khỏi m_playlist hiện tại
             for (int i = 0; i < m_favPlaylist.count(); ++i) {
-                QVariantMap favSong = m_favPlaylist[i].toMap();
-                if (favSong["title"] == title && favSong["artist"] == artist) {
+                if (m_favPlaylist[i].toMap()["title"] == title && m_favPlaylist[i].toMap()["artist"] == artist) {
                     m_favPlaylist.removeAt(i);
                     break;
                 }
@@ -170,8 +159,7 @@ void MusicController::addSongToCustomPlaylist(int songIndex, int targetPlaylistI
 
     bool alreadyExists = false;
     for (const QVariant& item : currentTargetList) {
-        QVariantMap existingSong = item.toMap();
-        if (existingSong["title"] == songToAdd["title"] && existingSong["artist"] == songToAdd["artist"]) {
+        if (item.toMap()["title"] == songToAdd["title"] && item.toMap()["artist"] == songToAdd["artist"]) {
             alreadyExists = true;
             break;
         }
@@ -249,8 +237,21 @@ void MusicController::playSong(int index)
     m_currentSongIndex = index;
     m_songProgress = 0.0;
     m_isPlaying = true;
-
     m_currentSongDuration = timeToSeconds(m_playlist[index].toMap()["duration"].toString());
+
+    // --- LƯU VÀO LỊCH SỬ NGHE GẦN ĐÂY ---
+    QVariantMap playingSong = m_playlist[index].toMap();
+    QString title = playingSong["title"].toString();
+    QString artist = playingSong["artist"].toString();
+
+    for (int i = 0; i < m_recentPlaylist.count(); ++i) {
+        if (m_recentPlaylist[i].toMap()["title"] == title && m_recentPlaylist[i].toMap()["artist"] == artist) {
+            m_recentPlaylist.removeAt(i);
+            break;
+        }
+    }
+    m_recentPlaylist.insert(0, playingSong);
+    // -----------------------------------
 
     if (!m_hasStartedPlaying) {
         m_hasStartedPlaying = true;

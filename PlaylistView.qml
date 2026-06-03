@@ -10,7 +10,6 @@ Item {
     onPlaylistTypeChanged: {
         if (playlistType !== "") {
             MusicApp.loadPlaylist(playlistType)
-            // TỰ ĐỘNG XÓA CHỮ TÌM KIẾM KHI BẠN CHUYỂN TAB KHÁC
             searchInput.text = ""
         }
     }
@@ -70,23 +69,19 @@ Item {
             Layout.fillHeight: true
             model: MusicApp.playlist
             clip: true
-            // XÓA SPACING MẶC ĐỊNH ĐỂ CÁC BÀI BỊ ẨN KHÔNG ĐỂ LẠI KHOẢNG TRỐNG
             spacing: 0
 
             delegate: Item {
                 id: delegateWrapper
                 width: playlistView.width
 
-                // --- BỘ NÃO TÌM KIẾM THÔNG MINH ---
                 property string searchText: searchInput.text.trim().toLowerCase()
                 property string songTitle: modelData.title.toLowerCase()
                 property string songArtist: modelData.artist.toLowerCase()
 
-                // Kiểm tra xem chữ gõ vào có nằm trong Tên bài HOẶC Tên ca sĩ không
                 property bool isMatch: searchText === "" || songTitle.indexOf(searchText) !== -1 || songArtist.indexOf(searchText) !== -1
 
                 visible: isMatch
-                // Nếu khớp thì hiện 83px (75px thẻ + 8px khoảng cách), nếu không thì teo lại bằng 0
                 height: isMatch ? 83 : 0
 
                 Rectangle {
@@ -109,7 +104,8 @@ Item {
                         hoverEnabled: true
                         z: -1
                         onClicked: {
-                            stackView.push("NowPlaying.qml")
+                            // SỬ DỤNG LOADER THAY VÌ STACKVIEW[cite: 11]
+                            contentLoader.setSource("NowPlaying.qml")
                             MusicApp.playSong(index)
                         }
                     }

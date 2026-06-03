@@ -184,7 +184,7 @@ Item {
                             id: playMouse
                             anchors.fill: parent
                             hoverEnabled: true
-                            onClicked: stackView.push("NowPlaying.qml")
+                            onClicked: contentLoader.setSource("NowPlaying.qml")
                         }
                     }
 
@@ -214,7 +214,7 @@ Item {
                             spacing: 15
 
                             Image {
-                                source: "qrc:/image_icons/addplaylist.png"
+                                source: "qrc:/image_icons/add.png"
                                 Layout.preferredWidth: 24
                                 Layout.preferredHeight: 24
                             }
@@ -282,7 +282,6 @@ Item {
                 }
             }
 
-            // --- CỘT PHẢI (MAIN CONTENT) ---
             Loader {
                 id: contentLoader
                 Layout.fillWidth: true
@@ -300,7 +299,7 @@ Item {
         }
 
         // ==========================================
-        // PHẦN DƯỚI: MINI PLAYER
+        // MINI PLAYER ĐÃ FIX LỖI TẠI ĐÂY
         // ==========================================
         Rectangle {
             id: miniPlayer
@@ -312,9 +311,12 @@ Item {
             border.width: 1
             visible: MusicApp.playlist.length > 0 && MusicApp.hasStartedPlaying
 
+            // BIẾN BẢO VỆ MẢNG (CHỐNG LỖI UNDEFINED)
+            property bool hasValidSong: MusicApp.playlist.length > 0 && MusicApp.currentSongIndex >= 0 && MusicApp.currentSongIndex < MusicApp.playlist.length
+
             MouseArea {
                 anchors.fill: parent
-                onClicked: stackView.push("NowPlaying.qml")
+                onClicked: contentLoader.setSource("NowPlaying.qml")
             }
 
             RowLayout {
@@ -358,13 +360,15 @@ Item {
                     Layout.alignment: Qt.AlignVCenter
                     spacing: 5
                     Text {
-                        text: MusicApp.playlist.length > 0 ? MusicApp.playlist[MusicApp.currentSongIndex].title : ""
+                        // SỬ DỤNG BIẾN BẢO VỆ ĐỂ KIỂM TRA TRƯỚC KHI TRÍCH XUẤT .title
+                        text: miniPlayer.hasValidSong ? MusicApp.playlist[MusicApp.currentSongIndex].title : ""
                         color: "white"
                         font.bold: true
                         font.pixelSize: 18
                     }
                     Text {
-                        text: MusicApp.playlist.length > 0 ? MusicApp.playlist[MusicApp.currentSongIndex].artist : ""
+                        // SỬ DỤNG BIẾN BẢO VỆ ĐỂ KIỂM TRA TRƯỚC KHI TRÍCH XUẤT .artist
+                        text: miniPlayer.hasValidSong ? MusicApp.playlist[MusicApp.currentSongIndex].artist : ""
                         color: "#94a3b8"
                         font.pixelSize: 14
                     }
@@ -556,9 +560,7 @@ Item {
             }
         }
     }
-    // ==========================================
-    // TOAST NOTIFICATION (CHỈ ĐẶT DUY NHẤT Ở MUSICHUB)
-    // ==========================================
+
     Popup {
         id: toastPopup
         parent: Overlay.overlay
