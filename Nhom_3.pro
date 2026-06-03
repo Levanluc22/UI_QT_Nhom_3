@@ -6,7 +6,8 @@ QT += quick
 
 SOURCES += \
         main.cpp \
-        dashboardcontroller.cpp
+        dashboardcontroller.cpp \
+        musiccontroller.cpp
 
 RESOURCES += qml.qrc
 
@@ -22,4 +23,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
-    dashboardcontroller.h
+    dashboardcontroller.h \
+    musiccontroller.h

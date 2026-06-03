@@ -3,7 +3,9 @@
         <file>AppCard.qml</file>
         <file>main.qml</file>
         <file>HomePage.qml</file>
-        <file>MusicPage.qml</file>
+        <file>MusicHub.qml</file>
+        <file>PlaylistView.qml</file>
+        <file>NowPlaying.qml</file>
         <file>SettingPage.qml</file>
         <file>DashboardCar.qml</file>
         <file>BottomBar.qml</file>
@@ -23,6 +25,7 @@
         <file alias="TopBar.png">Data_Lab05/Qt/img_Lab05/TopBar.png</file>
         <file alias="shade.png">Data_Lab05/Qt/img_Lab05/shade.png</file>
         <file alias="SportCarFloorShadow.png">Data_Lab05/Qt/img_Lab05/SportCarFloorShadow.png</file>
+        <file>PlaylistView.qml</file>
     </qresource>
     <qresource prefix="/image_icons">
         <file alias="wifi.png">image_icons/wifi.png</file>
@@ -43,7 +46,18 @@
         <file alias="next.png">image_icons/next.png</file>
         <file alias="previous.png">image_icons/previous.png</file>
         <file alias="backward.png">image_icons/backward.png</file>
+        <file alias="add.png">image_icons/add.png</file>
+        <file alias="delete.png">image_icons/delete.png</file>
+        <file alias="edit.png">image_icons/edit.png</file>
+        <file alias="heart.png">image_icons/heart.png</file>
+        <file alias="hearted.png">image_icons/hearted.png</file>
         <file alias="forward.png">image_icons/forward.png</file>
+        <file alias="back.png">image_icons/back.png</file>
+        <file alias="history.png">image_icons/history.png</file>
+        <file alias="playlist.png">image_icons/playlist.png</file>
+        <file alias="three-dots.png">image_icons/three-dots.png</file>
+        <file alias="search.png">image_icons/search.png</file>
+        <file alias="addplaylist.png">image_icons/addplaylist.png</file>
     </qresource>
     <qresource prefix="/icons">
         <file alias="bottom.png">Data_Lab05/Qt/img_Lab05/icons/bottom.png</file>

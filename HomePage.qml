@@ -22,23 +22,38 @@ Item {
             rowSpacing: 25
             Layout.fillWidth: true
 
-            AppCard { title: "Nhạc"; iconSource: "qrc:/image_icons/music.png"; color1: "#c084fc"; color2: "#db2777"  ; onClicked: stackView.replace("qrc:/MusicPage.qml") }
+            AppCard {
+                title: "Nhạc"
+                iconSource: "qrc:/image_icons/music.png"
+                color1: "#c084fc"
+                color2: "#db2777"
+                onClicked: root.navigateTo("music", "MusicHub.qml")
+            }
             AppCard {
                 title: "Xe"
                 iconSource: "qrc:/image_icons/car.png"
                 color1: "#38bdf8"
                 color2: "#0284c7"
-                onClicked: stackView.push("qrc:/DashboardCar.qml")
+                onClicked: root.showCarWindow()
             }
             AppCard { title: "Bản đồ"; iconSource: "qrc:/image_icons/google-maps.png"; color1: "#38bdf8"; color2: "#0284c7" }
             AppCard { title: "Điện thoại"; iconSource: "qrc:/image_icons/call.png"; color1: "#4ade80"; color2: "#16a34a" }
-            AppCard { title: "Cài đặt"; iconSource: "qrc:/image_icons/setting.png"; color1: "#94a3b8"; color2: "#475569" ; onClicked: stackView.replace("qrc:/SettingPage.qml")}
+            AppCard {
+                title: "Cài đặt"
+                iconSource: "qrc:/image_icons/setting.png"
+                color1: "#94a3b8"
+                color2: "#475569"
+                onClicked: root.navigateTo("settings", "SettingPage.qml")
+            }
             AppCard { title: "Radio"; iconSource: "qrc:/image_icons/radio.png"; color1: "#fbbf24"; color2: "#d97706" }
             AppCard { title: "Điều hoà"; iconSource: "qrc:/image_icons/wind.png"; color1: "#f87171"; color2: "#dc2626" }
         }
 
         Item { Layout.fillHeight: true }
 
+        // ==========================================
+        // MINI PLAYER ĐÃ KẾT NỐI VỚI C++ (MusicApp)
+        // ==========================================
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 110
@@ -46,7 +61,7 @@ Item {
             radius: 25
             border.color: "#1e293b"
             border.width: 1
-
+            visible: MusicApp.playlist.length > 0 && MusicApp.hasStartedPlaying
             RowLayout {
                 anchors.fill: parent
                 anchors.margins: 20
@@ -66,8 +81,11 @@ Item {
                         height: 35
                         anchors.centerIn: parent
                         RotationAnimator on rotation {
-                            running: root.isPlaying
-                            from: 0; to: 360; duration: 8000; loops: Animation.Infinite
+                            running: MusicApp.isPlaying // Gọi trạng thái từ C++
+                            from: 0
+                            to: 360
+                            duration: 8000
+                            loops: Animation.Infinite
                         }
                     }
                 }
@@ -78,18 +96,18 @@ Item {
                     spacing: 8
 
                     Text {
-                        text: globalPlaylist.get(root.currentSongIndex).title
+                        // Tránh lỗi khi danh sách nhạc từ C++ trống
+                        text: MusicApp.playlist.length > 0 ? MusicApp.playlist[MusicApp.currentSongIndex].title : "Chưa có bài hát"
                         color: "white"
                         font.bold: true
                         font.pixelSize: 18
                     }
                     Text {
-                        text: globalPlaylist.get(root.currentSongIndex).artist
+                        text: MusicApp.playlist.length > 0 ? MusicApp.playlist[MusicApp.currentSongIndex].artist : ""
                         color: "#94a3b8"
                         font.pixelSize: 14
                     }
 
-                    // Thanh tiến trình Mini Player có thể kéo thả
                     Item {
                         width: parent.width * 0.7
                         height: 15
@@ -101,7 +119,7 @@ Item {
                             color: "#334155"
                             radius: 2.5
                             Rectangle {
-                                width: parent.width * root.songProgress
+                                width: parent.width * MusicApp.songProgress // Lấy phần trăm chạy từ C++
                                 height: parent.height
                                 radius: 2.5
                                 gradient: Gradient {
@@ -111,17 +129,17 @@ Item {
                             }
                         }
 
-                        // Vùng bấm tua nhạc
+                        // Gửi lệnh tua nhạc xuống C++
                         MouseArea {
                             anchors.fill: parent
                             onClicked: {
                                 var newProgress = mouse.x / width
-                                root.songProgress = Math.min(Math.max(newProgress, 0), 1)
+                                MusicApp.seekToProgress(Math.min(Math.max(newProgress, 0), 1))
                             }
                             onPositionChanged: {
                                 if (pressed) {
                                     var dragProgress = mouse.x / width
-                                    root.songProgress = Math.min(Math.max(dragProgress, 0), 1)
+                                    MusicApp.seekToProgress(Math.min(Math.max(dragProgress, 0), 1))
                                 }
                             }
                         }
@@ -133,30 +151,48 @@ Item {
                     Layout.alignment: Qt.AlignVCenter
 
                     Item {
-                        width: 40; height: 40
+                        width: 40
+                        height: 40
                         Image {
-                            source: "qrc:/image_icons/previous.png"; anchors.fill: parent
+                            source: "qrc:/image_icons/previous.png"
+                            anchors.fill: parent
                             opacity: mousePrevMini.containsMouse ? 1.0 : 0.7
                         }
-                        MouseArea { id: mousePrevMini; anchors.fill: parent; hoverEnabled: true; onClicked: root.prevSong() }
+                        MouseArea {
+                            id: mousePrevMini
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: MusicApp.prevSong() // Lệnh chuyển bài C++
+                        }
                     }
 
                     Item {
-                        width: 30; height: 30
+                        width: 40
+                        height: 40
                         Image {
-                            source: root.isPlaying ? "qrc:/image_icons/pause.png" : "qrc:/image_icons/play.png"
+                            source: MusicApp.isPlaying ? "qrc:/image_icons/pause.png" : "qrc:/image_icons/play.png"
                             anchors.fill: parent
                         }
-                        MouseArea { anchors.fill: parent; onClicked: root.isPlaying = !root.isPlaying }
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: MusicApp.isPlaying = !MusicApp.isPlaying
+                        }
                     }
 
                     Item {
-                        width: 40; height: 40
+                        width: 40
+                        height: 40
                         Image {
-                            source: "qrc:/image_icons/next.png"; anchors.fill: parent
+                            source: "qrc:/image_icons/next.png"
+                            anchors.fill: parent
                             opacity: mouseNextMini.containsMouse ? 1.0 : 0.7
                         }
-                        MouseArea { id: mouseNextMini; anchors.fill: parent; hoverEnabled: true; onClicked: root.nextSong() }
+                        MouseArea {
+                            id: mouseNextMini
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: MusicApp.nextSong()
+                        }
                     }
                 }
             }
